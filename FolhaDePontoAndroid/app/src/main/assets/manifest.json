@@ -1,0 +1,18 @@
+{
+  "name": "Folha de Ponto - Associação",
+  "short_name": "Folha Ponto",
+  "description": "Sistema de controle de folha de ponto, cadastro de equipe (até 23 colaboradores) e geração de folha A4 para impressão/PDF.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0f172a",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Folha de Ponto</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <style>
+    :root {
+      --bg: #f1f5f9;
+      --surface: #ffffff;
+      --primary: #0f172a;
+      --accent: #10b981;
+      --accent-hover: #059669;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --weekend: #f8fafc;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      padding-bottom: 48px;
+    }
+
+    /* Top App Bar */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .brand-icon {
+      width: 34px;
+      height: 34px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+    }
+
+    .top-badges {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .badge {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .btn-install {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: none;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 16px auto;
+      padding: 0 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .card-sub {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .progress-bar {
+      height: 6px;
+      background: var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--primary);
+      transition: width 0.25s ease;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 10px;
+      padding: 9px 14px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: 0.15s;
+    }
+
+    .btn-green {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-green:hover { background: var(--accent-hover); }
+    .btn-green:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-dark {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-outline {
+      background: #fff;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    /* Lista de Colaboradores */
+    .collab-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .collab-item {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      cursor: pointer;
+      transition: 0.15s;
+      background: #fff;
+    }
+
+    .collab-item.active {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .collab-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .collab-name {
+      font-weight: 700;
+      font-size: 0.95rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .collab-role {
+      font-size: 0.8rem;
+      opacity: 0.78;
+      margin-top: 2px;
+    }
+
+    .collab-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .icon-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.95rem;
+    }
+
+    .collab-item.active .icon-btn { color: #fff; }
+    .collab-item:not(.active) .icon-btn.edit { color: var(--muted); }
+    .icon-btn.del { color: var(--danger) !important; }
+
+    /* Formulários */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .grid-2 { grid-template-columns: 1fr; }
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .field label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .field input, .field select {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.92rem;
+      background: #fff;
+      color: var(--text);
+      outline: none;
+    }
+
+    .field input:focus, .field select:focus {
+      border-color: var(--primary);
+    }
+
+    .mode-switch {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .chip {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      background: #fff;
+    }
+
+    .chip.selected {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    /* Pré-visualização da Folha */
+    .sheet-wrapper {
+      overflow-x: auto;
+      margin-top: 12px;
+    }
+
+    .sheet-paper {
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      padding: 20px;
+      min-width: 680px;
+    }
+
+    .sheet-header-title {
+      text-align: center;
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      padding: 8px;
+      background: #0f172a;
+      color: #fff;
+      margin-bottom: 10px;
+    }
+
+    .sheet-meta {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 12px;
+      font-size: 0.82rem;
+    }
+
+    .sheet-meta td {
+      border: 1px solid #94a3b8;
+      padding: 5px 8px;
+    }
+
+    .sheet-meta strong {
+      color: #1e293b;
+    }
+
+    .sheet-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+    }
+
+    .sheet-table th {
+      background: #f1f5f9;
+      border: 1px solid #94a3b8;
+      padding: 6px 4px;
+      text-align: center;
+      font-weight: 700;
+    }
+
+    .sheet-table td {
+      border: 1px solid #94a3b8;
+      padding: 3px 6px;
+      text-align: center;
+      height: 24px;
+    }
+
+    .sheet-table tr.is-weekend {
+      background: #f1f5f9;
+      color: #475569;
+    }
+
+    .time-input {
+      width: 66px;
+      border: 1px dashed #cbd5e1;
+      border-radius: 4px;
+      text-align: center;
+      font-size: 0.78rem;
+      padding: 2px;
+      background: transparent;
+    }
+
+    .sheet-footer {
+      display: flex;
+      justify-content: space-around;
+      margin-top: 34px;
+      padding-top: 8px;
+      font-size: 0.82rem;
+    }
+
+    .sig-box {
+      text-align: center;
+      width: 42%;
+      border-top: 1px solid #334155;
+      padding-top: 4px;
+      font-weight: 600;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 100;
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      background: #fff;
+      border-radius: 16px;
+      width: 100%;
+      max-width: 440px;
+      padding: 20px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.15);
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 16px;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #0f172a;
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+      z-index: 200;
+    }
+
+    .toast.show { opacity: 1; }
+
+    /* Estilos exclusivos de Impressão / PDF A4 */
+    @media print {
+      @page {
+        size: A4 portrait;
+        margin: 8mm;
+      }
+      body {
+        background: #fff !important;
+        padding: 0 !important;
+      }
+      .no-print, .topbar, .toast, .modal-backdrop {
+        display: none !important;
+      }
+      .container {
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      .card.sheet-card {
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+      }
+      .sheet-wrapper {
+        overflow: visible !important;
+        margin: 0 !important;
+      }
+      .sheet-paper {
+        border: none !important;
+        padding: 0 !important;
+        min-width: 100% !important;
+      }
+      .sheet-table td {
+        height: 19px !important;
+        padding: 1px 4px !important;
+        font-size: 0.74rem !important;
+      }
+      .sheet-table th {
+        padding: 4px !important;
+        font-size: 0.75rem !important;
+      }
+      .time-input {
+        border: none !important;
+      }
+      .sheet-footer {
+        margin-top: 22px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Barra Superior -->
+  <header class="topbar no-print">
+    <div class="brand">
+      <div class="brand-icon">📋</div>
+      <span>Folha de Ponto</span>
+    </div>
+    <div class="top-badges">
+      <button id="btnInstall" class="btn-install">📲 Instalar App</button>
+      <span class="badge" id="badgeCnpj">CNPJ 57.170.879/0001-37</span>
+      <span class="badge" id="badgeCount">2/23</span>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Card 1: Colaboradores -->
+    <section class="card no-print">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Colaboradores</h2>
+          <p class="card-sub" id="collabCounterText">2 de 23 cadastrados</p>
+        </div>
+        <button class="btn btn-green" id="btnOpenAdd">+ Adicionar</button>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="collabProgress" style="width: 8.7%;"></div>
+      </div>
+      <div class="collab-list" id="collabList"></div>
+    </section>
+
+    <!-- Card 2: Período da Folha -->
+    <section class="card no-print">
+      <h2 class="card-title" style="margin-bottom: 12px;">Período da folha</h2>
+      <div class="grid-2">
+        <div class="field">
+          <label for="selectMonth">Mês</label>
+          <select id="selectMonth">
+            <option value="0">Janeiro</option>
+            <option value="1">Fevereiro</option>
+            <option value="2">Março</option>
+            <option value="3">Abril</option>
+            <option value="4">Maio</option>
+            <option value="5">Junho</option>
+            <option value="6">Julho</option>
+            <option value="7">Agosto</option>
+            <option value="8">Setembro</option>
+            <option value="9">Outubro</option>
+            <option value="10">Novembro</option>
+            <option value="11" selected>Dezembro</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="inputYear">Ano</label>
+          <input type="number" id="inputYear" value="2026" min="2020" max="2099" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Card 3: Empresa -->
+    <section class="card no-print">
+      <h2 class="card-title">Empresa</h2>
+      <p class="card-sub" style="margin-bottom: 12px;">Aparece no cabeçalho da folha.</p>
+      <div class="grid-2">
+        <div class="field">
+          <label for="inputCompany">Nome da empresa</label>
+          <input type="text" id="inputCompany" value="Associação de Mães Unidas pela Educação" />
+        </div>
+        <div class="field">
+          <label for="inputCnpj">CNPJ</label>
+          <input type="text" id="inputCnpj" value="57.170.879/0001-37" />
+        </div>
+      </div>
+      <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+        <button class="btn btn-dark" id="btnSaveCompany">Salvar empresa</button>
+      </div>
+    </section>
+
+    <!-- Card 4: Visualização & PDF -->
+    <section class="card sheet-card">
+      <div class="card-header no-print" style="flex-wrap: wrap;">
+        <div>
+          <h2 class="card-title" id="previewTitle">JACYARA CORDEIRO RODRIGUES</h2>
+          <p class="card-sub" id="previewSubtitle">Dezembro de 2026 · folha em branco para preencher à mão</p>
+          <div class="mode-switch">
+            <button class="chip selected" id="chipBlank">Folha em branco (manual)</button>
+            <button class="chip" id="chipDigital">Preencher horários no app</button>
+          </div>
+        </div>
+        <button class="btn btn-green" onclick="window.print()">🖨️ Baixar PDF / Imprimir</button>
+      </div>
+
+      <div class="sheet-wrapper">
+        <div class="sheet-paper" id="sheetPaper">
+          <div class="sheet-header-title">FOLHA DE PONTO</div>
+          <table class="sheet-meta">
+            <tr>
+              <td colspan="2"><strong>Empresa:</strong> <span id="pCompany"></span></td>
+              <td><strong>CNPJ:</strong> <span id="pCnpj"></span></td>
+            </tr>
+            <tr>
+              <td colspan="2"><strong>Colaborador:</strong> <span id="pCollabName"></span></td>
+              <td><strong>Cargo / Função:</strong> <span id="pCollabRole"></span></td>
+            </tr>
+            <tr>
+              <td colspan="2"><strong>Mês / Ano:</strong> <span id="pPeriod"></span></td>
+              <td><strong>Horário de trabalho:</strong> <span id="pSchedule"></span></td>
+            </tr>
+          </table>
+
+          <table class="sheet-table">
+            <thead>
+              <tr>
+                <th style="width: 44px;">Dia</th>
+                <th style="width: 105px;">Dia da semana</th>
+                <th style="width: 82px;">Entrada</th>
+                <th style="width: 92px;">Saída almoço</th>
+                <th style="width: 92px;">Volta almoço</th>
+                <th style="width: 82px;">Saída</th>
+                <th id="thExtra">Assinatura</th>
+              </tr>
+            </thead>
+            <tbody id="sheetBody"></tbody>
+          </table>
+
+          <div class="sheet-footer">
+            <div class="sig-box">Assinatura do colaborador</div>
+            <div class="sig-box">Assinatura do responsável</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal Adicionar / Editar Colaborador -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal">
+      <h3 class="card-title" id="modalTitle" style="margin-bottom: 12px;">Adicionar Colaborador</h3>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <div class="field">
+          <label for="mName">Nome completo</label>
+          <input type="text" id="mName" placeholder="Ex: Maria da Silva" />
+        </div>
+        <div class="field">
+          <label for="mRole">Cargo / Função</label>
+          <input type="text" id="mRole" placeholder="Ex: Auxiliar Administrativo" />
+        </div>
+        <div class="field">
+          <label for="mSchedule">Horário de trabalho (opcional)</label>
+          <input type="text" id="mSchedule" placeholder="Ex: 08:00 às 17:00 (1h almoço)" />
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-outline" id="btnCancelModal">Cancelar</button>
+        <button class="btn btn-green" id="btnSaveCollab">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const MAX_COLLABS = 23;
+    const STORAGE_KEY = 'folha_ponto_pwa_v1';
+    const MONTHS = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+
+    const defaultState = {
+      company: 'Associação de Mães Unidas pela Educação',
+      cnpj: '57.170.879/0001-37',
+      month: 11,
+      year: 2026,
+      mode: 'blank', // 'blank' ou 'digital'
+      selectedId: '1',
+      collaborators: [
+        { id: '1', name: 'JACYARA CORDEIRO RODRIGUES', role: 'Diretor Geral', schedule: '08:00 às 17:00' },
+        { id: '2', name: 'KLEYDSON MARIANO SANTOS OLIVEIRA', role: 'Diretor Financeiro', schedule: '08:00 às 17:00' }
+      ],
+      logs: {} // chave: `${collabId}_${year}_${month}_${day}` -> { in, lunchOut, lunchIn, out }
+    };
+
+    let state = loadState();
+    let editingId = null;
+    let deferredPrompt = null;
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) return { ...defaultState, ...JSON.parse(raw) };
+      } catch (e) {}
+      return structuredClone(defaultState);
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 2400);
+    }
+
+    function calcDayHours(entry) {
+      if (!entry || !entry.in || !entry.out) return '';
+      const toMin = (str) => {
+        const [h, m] = str.split(':').map(Number);
+        return (isNaN(h) || isNaN(m)) ? null : h * 60 + m;
+      };
+      const tIn = toMin(entry.in);
+      const tOut = toMin(entry.out);
+      if (tIn === null || tOut === null || tOut <= tIn) return '';
+      let diff = tOut - tIn;
+      const lOut = toMin(entry.lunchOut || '');
+      const lIn = toMin(entry.lunchIn || '');
+      if (lOut !== null && lIn !== null && lIn > lOut) {
+        diff -= (lIn - lOut);
+      }
+      const hh = String(Math.floor(diff / 60)).padStart(2, '0');
+      const mm = String(diff % 60).padStart(2, '0');
+      return `${hh}:${mm}`;
+    }
+
+    function renderAll() {
+      // Topbar & empresa
+      document.getElementById('badgeCnpj').textContent = `CNPJ ${state.cnpj}`;
+      document.getElementById('badgeCount').textContent = `${state.collaborators.length}/${MAX_COLLABS}`;
+      document.getElementById('inputCompany').value = state.company;
+      document.getElementById('inputCnpj').value = state.cnpj;
+      document.getElementById('selectMonth').value = String(state.month);
+      document.getElementById('inputYear').value = state.year;
+
+      // Progresso colaboradores
+      const count = state.collaborators.length;
+      document.getElementById('collabCounterText').textContent = `${count} de ${MAX_COLLABS} cadastrados`;
+      document.getElementById('collabProgress').style.width = `${Math.min(100, (count / MAX_COLLABS) * 100)}%`;
+      document.getElementById('btnOpenAdd').disabled = count >= MAX_COLLABS;
+
+      if (!state.collaborators.some(c => c.id === state.selectedId) && count > 0) {
+        state.selectedId = state.collaborators[0].id;
+      }
+
+      // Lista de colaboradores
+      const listEl = document.getElementById('collabList');
+      listEl.innerHTML = '';
+      state.collaborators.forEach((c) => {
+        const div = document.createElement('div');
+        div.className = `collab-item ${c.id === state.selectedId ? 'active' : ''}`;
+        div.onclick = () => {
+          state.selectedId = c.id;
+          saveState();
+          renderAll();
+        };
+
+        div.innerHTML = `
+          <div class="collab-info">
+            <div class="collab-name">${escapeHtml(c.name)}</div>
+            <div class="collab-role">${escapeHtml(c.role)}</div>
+          </div>
+          <div class="collab-actions">
+            <button class="icon-btn edit" title="Editar">✏️</button>
+            <button class="icon-btn del" title="Excluir">🗑️</button>
+          </div>
+        `;
+
+        div.querySelector('.edit').onclick = (e) => {
+          e.stopPropagation();
+          openModal(c);
+        };
+        div.querySelector('.del').onclick = (e) => {
+          e.stopPropagation();
+          if (state.collaborators.length <= 1) {
+            showToast('Mantenha pelo menos 1 colaborador.');
+            return;
+          }
+          state.collaborators = state.collaborators.filter(item => item.id !== c.id);
+          saveState();
+          renderAll();
+          showToast('Colaborador removido.');
+        };
+
+        listEl.appendChild(div);
+      });
+
+      // Chips de modo
+      document.getElementById('chipBlank').classList.toggle('selected', state.mode === 'blank');
+      document.getElementById('chipDigital').classList.toggle('selected', state.mode === 'digital');
+
+      // Folha de Ponto
+      const activeCollab = state.collaborators.find(c => c.id === state.selectedId) || {
+        name: 'Sem colaborador', role: '-', schedule: ''
+      };
+
+      document.getElementById('previewTitle').textContent = activeCollab.name;
+      document.getElementById('previewSubtitle').textContent =
+        `${MONTHS[state.month]} de ${state.year} · ` +
+        (state.mode === 'blank' ? 'folha em branco para preencher à mão' : 'preenchimento digital com cálculo automático');
+
+      document.getElementById('pCompany').textContent = state.company;
+      document.getElementById('pCnpj').textContent = state.cnpj;
+      document.getElementById('pCollabName').textContent = activeCollab.name;
+      document.getElementById('pCollabRole').textContent = activeCollab.role;
+      document.getElementById('pPeriod').textContent = `${MONTHS[state.month]} / ${state.year}`;
+      document.getElementById('pSchedule').textContent = activeCollab.schedule || '';
+      document.getElementById('thExtra').textContent = state.mode === 'blank' ? 'Assinatura' : 'Total / Assinatura';
+
+      const daysInMonth = new Date(state.year, state.month + 1, 0).getDate();
+      const tbody = document.getElementById('sheetBody');
+      tbody.innerHTML = '';
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const dt = new Date(state.year, state.month, d);
+        const wd = dt.getDay();
+        const isWeekend = (wd === 0 || wd === 6);
+        const tr = document.createElement('tr');
+        if (isWeekend) tr.className = 'is-weekend';
+
+        const dayStr = String(d).padStart(2, '0');
+        const logKey = `${activeCollab.id}_${state.year}_${state.month}_${d}`;
+        const log = state.logs[logKey] || { in: '', lunchOut: '', lunchIn: '', out: '' };
+
+        if (state.mode === 'blank') {
+          tr.innerHTML = `
+            <td><strong>${dayStr}</strong></td>
+            <td>${WEEKDAYS[wd]}</td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td>${isWeekend ? '<span style="font-size:0.7rem;color:#64748b;">Descanso</span>' : ''}</td>
+          `;
+        } else {
+          const totalH = calcDayHours(log);
+          tr.innerHTML = `
+            <td><strong>${dayStr}</strong></td>
+            <td>${WEEKDAYS[wd]}</td>
+            <td><input type="time" class="time-input" data-k="${logKey}" data-f="in" value="${log.in || ''}"></td>
+            <td><input type="time" class="time-input" data-k="${logKey}" data-f="lunchOut" value="${log.lunchOut || ''}"></td>
+            <td><input type="time" class="time-input" data-k="${logKey}" data-f="lunchIn" value="${log.lunchIn || ''}"></td>
+            <td><input type="time" class="time-input" data-k="${logKey}" data-f="out" value="${log.out || ''}"></td>
+            <td><strong>${totalH}</strong></td>
+          `;
+        }
+        tbody.appendChild(tr);
+      }
+
+      if (state.mode === 'digital') {
+        tbody.querySelectorAll('.time-input').forEach(inp => {
+          inp.onchange = (e) => {
+            const k = e.target.dataset.k;
+            const f = e.target.dataset.f;
+            if (!state.logs[k]) state.logs[k] = {};
+            state.logs[k][f] = e.target.value;
+            saveState();
+            renderAll();
+          };
+        });
+      }
+    }
+
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, m => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+
+    // Modal handlers
+    function openModal(collab = null) {
+      editingId = collab ? collab.id : null;
+      document.getElementById('modalTitle').textContent = collab ? 'Editar Colaborador' : 'Adicionar Colaborador';
+      document.getElementById('mName').value = collab ? collab.name : '';
+      document.getElementById('mRole').value = collab ? collab.role : '';
+      document.getElementById('mSchedule').value = collab ? (collab.schedule || '') : '08:00 às 17:00';
+      document.getElementById('modalBackdrop').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('modalBackdrop').classList.remove('open');
+    }
+
+    document.getElementById('btnOpenAdd').onclick = () => openModal(null);
+    document.getElementById('btnCancelModal').onclick = closeModal;
+
+    document.getElementById('btnSaveCollab').onclick = () => {
+      const name = document.getElementById('mName').value.trim();
+      const role = document.getElementById('mRole').value.trim();
+      const schedule = document.getElementById('mSchedule').value.trim();
+
+      if (!name || !role) {
+        showToast('Preencha nome e cargo.');
+        return;
+      }
+
+      if (editingId) {
+        const idx = state.collaborators.findIndex(c => c.id === editingId);
+        if (idx !== -1) state.collaborators[idx] = { ...state.collaborators[idx], name, role, schedule };
+        showToast('Colaborador atualizado!');
+      } else {
+        if (state.collaborators.length >= MAX_COLLABS) {
+          showToast('Limite máximo de 23 colaboradores atingido.');
+          return;
+        }
+        const newId = String(Date.now());
+        state.collaborators.push({ id: newId, name, role, schedule });
+        state.selectedId = newId;
+        showToast('Colaborador adicionado!');
+      }
+
+      saveState();
+      closeModal();
+      renderAll();
+    };
+
+    // Período e empresa
+    document.getElementById('selectMonth').onchange = (e) => {
+      state.month = Number(e.target.value);
+      saveState();
+      renderAll();
+    };
+
+    document.getElementById('inputYear').onchange = (e) => {
+      const y = Number(e.target.value);
+      if (y >= 2020 && y <= 2099) {
+        state.year = y;
+        saveState();
+        renderAll();
+      }
+    };
+
+    document.getElementById('btnSaveCompany').onclick = () => {
+      state.company = document.getElementById('inputCompany').value.trim() || defaultState.company;
+      state.cnpj = document.getElementById('inputCnpj').value.trim() || defaultState.cnpj;
+      saveState();
+      renderAll();
+      showToast('Dados da empresa salvos!');
+    };
+
+    document.getElementById('chipBlank').onclick = () => {
+      state.mode = 'blank';
+      saveState();
+      renderAll();
+    };
+
+    document.getElementById('chipDigital').onclick = () => {
+      state.mode = 'digital';
+      saveState();
+      renderAll();
+    };
+
+    // Registro do Service Worker e prompt de instalação PWA
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('./sw.js').catch(() => {});
+    }
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      const btn = document.getElementById('btnInstall');
+      btn.style.display = 'inline-block';
+      btn.onclick = async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        await deferredPrompt.userChoice;
+        deferredPrompt = null;
+        btn.style.display = 'none';
+      };
+    });
+
+    renderAll();
+  </script>
+</body>
+</html>
